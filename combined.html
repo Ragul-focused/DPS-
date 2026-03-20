@@ -22,7 +22,8 @@
       padding: 10px 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: 16px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.35);
       position: sticky;
       top: 0;
@@ -101,23 +102,23 @@
   <div class="top-bar">
     <div class="top-bar-title">📋 Elite Preforms</div>
     <nav class="tab-nav" role="tablist">
-      <button class="tab-btn active" id="tab-log"  onclick="switchTab('log')"  role="tab" aria-selected="true">
-        📒 Daily Log Sheet
-      </button>
-      <button class="tab-btn"        id="tab-dps"  onclick="switchTab('dps')"  role="tab" aria-selected="false">
+      <button class="tab-btn active" id="tab-dps"  onclick="switchTab('dps')"  role="tab" aria-selected="true">
         📋 Daily Production Sheet
+      </button>
+      <button class="tab-btn"        id="tab-log"  onclick="switchTab('log')"  role="tab" aria-selected="false">
+        📒 Daily Log Sheet
       </button>
     </nav>
   </div>
 
-  <!-- Daily Log Sheet Tab -->
-  <div class="tab-content active" id="content-log" role="tabpanel">
-    <iframe src="dailyform.html"    id="frame-log"  title="Daily Log Sheet"       loading="lazy"></iframe>
+  <!-- Daily Production Sheet Tab -->
+  <div class="tab-content active" id="content-dps" role="tabpanel">
+    <iframe src="updated DPS.html" id="frame-dps"  title="Daily Production Sheet" loading="lazy"></iframe>
   </div>
 
-  <!-- Daily Production Sheet Tab -->
-  <div class="tab-content" id="content-dps" role="tabpanel">
-    <iframe src="updated DPS.html" id="frame-dps"  title="Daily Production Sheet" loading="lazy"></iframe>
+  <!-- Daily Log Sheet Tab -->
+  <div class="tab-content" id="content-log" role="tabpanel">
+    <iframe src="dailyform.html"    id="frame-log"  title="Daily Log Sheet"       loading="lazy"></iframe>
   </div>
 
   <script>
