@@ -1006,6 +1006,32 @@
             transform: translateY(0);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+        /* ── Company Name dropdown ── */
+        .cn-select {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 1px 3px;
+            background: transparent;
+            color: var(--text);
+            min-height: var(--cell-h);
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .cn-select:focus {
+            background: #fffbe8;
+        }
+
+        .cn-select option {
+            background: #fff;
+            color: var(--text);
+        }
     </style>
 </head>
 
@@ -2693,30 +2719,75 @@
            ADD ROW HELPERS
            data-bags marks the Production Bags cell
         ════════════════════════════════════════ */
+        /* ── Company name list ── */
+        const CO_NAMES = [
+            'SS PET', 'ALL PET', 'SVL', 'SVL2', 'AK PET',
+            'MDC KUSHAL', 'MDC U/B', 'AMMAN PET', 'BABU AQUA',
+            'PONNI PLASTIC', 'VS PET', 'KANISKA AQUA', 'SATHIYA AQUA'
+        ];
+
+        function makeCoSelect() {
+            const sel = document.createElement('select');
+            sel.className = 'cn-select';
+            sel.innerHTML = '<option value=""></option>' +
+                CO_NAMES.map(n => `<option value="${n}">${n}</option>`).join('');
+            return sel;
+        }
+
         function addBtRow(tableId) {
             const tbody = document.querySelector('#' + tableId + ' tbody');
             const tr = document.createElement('tr');
             tr.innerHTML =
                 '<td><input type="number" step="any"/></td>' +
                 '<td data-bags="1"><input type="number" step="any"/></td>' +
-                '<td class="cn-td"><input type="text"/></td>' +
+                '<td class="cn-td"></td>' +
                 '<td><input type="number" step="any"/></td>' +
                 '<td class="p2-close"><input type="number" step="any" readonly/></td>';
+            tr.querySelector('.cn-td').appendChild(makeCoSelect());
             tbody.appendChild(tr);
             tr.querySelector('input').focus();
         }
+
         function addStRow(tableId) {
             const tbody = document.querySelector('#' + tableId + ' tbody');
             const tr = document.createElement('tr');
             tr.innerHTML =
                 '<td><input type="number" step="any"/></td>' +
                 '<td data-bags="1"><input type="number" step="any"/></td>' +
-                '<td><input type="text"/></td>' +
+                '<td class="cn-td"></td>' +
                 '<td><input type="number" step="any"/></td>' +
                 '<td class="p2-close"><input type="number" step="any" readonly/></td>';
+            tr.querySelector('.cn-td').appendChild(makeCoSelect());
             tbody.appendChild(tr);
             tr.querySelector('input').focus();
         }
+
+        /* ── Init: replace all existing Company Name text inputs with dropdowns ── */
+        function initCompanyDropdowns() {
+            // Page 1: bt tables — cells have class cn-td
+            document.querySelectorAll('td.cn-td').forEach(td => {
+                const old = td.querySelector('input[type="text"]');
+                if (!old) return;
+                const sel = makeCoSelect();
+                sel.value = old.value || '';
+                td.replaceChild(sel, old);
+            });
+
+            // Page 2: st tables — company name is the 3rd td in each row
+            document.querySelectorAll('table.st tbody tr').forEach(tr => {
+                const td = tr.cells[2];
+                if (!td) return;
+                const old = td.querySelector('input[type="text"]');
+                if (!old) return;
+                td.classList.add('cn-td');
+                const sel = makeCoSelect();
+                sel.value = old.value || '';
+                td.replaceChild(sel, old);
+            });
+        }
+
+        // Also patch freeze/unlock to handle select elements in cn-td
+        document.addEventListener('DOMContentLoaded', initCompanyDropdowns);
 
         /* ════════════════════════════════════════
            PAGE 1 & 2 — ROW-LEVEL CLOSING STOCK
