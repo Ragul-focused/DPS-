@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amount Ledger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            min-width: 580px;
+            border-collapse: collapse;
+            border: 1.5px solid #000;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 0;
+        }
+
+        thead tr:first-child th {
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        thead tr:last-child th {
+            font-weight: normal;
+            text-align: center;
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        /* PC */
+        @media (min-width: 1024px) {
+            body {
+                padding: 30px 40px;
+            }
+
+            thead tr:first-child th {
+                font-size: 14px;
+                height: 34px;
+            }
+
+            thead tr:last-child th {
+                font-size: 13px;
+                height: 26px;
+            }
+
+            tbody td {
+                height: 28px;
+            }
+
+            .col-date {
+                width: 10%;
+            }
+
+            .col-rcvd {
+                width: 13%;
+            }
+
+            .col-party {
+                width: 32%;
+            }
+
+            .col-in {
+                width: 17%;
+            }
+
+            .col-out {
+                width: 17%;
+            }
+
+            .col-save {
+                width: 11%;
+            }
+
+            .date-cell {
+                font-size: 13px;
+            }
+
+            .rcvd-select {
+                font-size: 12px;
+            }
+
+            .party-select {
+                font-size: 12px;
+            }
+        }
+
+        /* Tablet */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            body {
+                padding: 20px 24px;
+            }
+
+            thead tr:first-child th {
+                font-size: 12px;
+                height: 30px;
+            }
+
+            thead tr:last-child th {
+                font-size: 11px;
+                height: 24px;
+            }
+
+            tbody td {
+                height: 26px;
+            }
+
+            .col-date {
+                width: 11%;
+            }
+
+            .col-rcvd {
+                width: 14%;
+            }
+
+            .col-party {
+                width: 30%;
+            }
+
+            .col-in {
+                width: 17%;
+            }
+
+            .col-out {
+                width: 17%;
+            }
+
+            .col-save {
+                width: 11%;
+            }
+
+            .date-cell {
+                font-size: 11px;
+            }
+
+            .rcvd-select {
+                font-size: 11px;
+            }
+
+            .party-select {
+                font-size: 11px;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 767px) {
+            body {
+                padding: 12px 10px;
+            }
+
+            thead tr:first-child th {
+                font-size: 10px;
+                height: 26px;
+            }
+
+            thead tr:last-child th {
+                font-size: 9px;
+                height: 22px;
+            }
+
+            tbody td {
+                height: 24px;
+            }
+
+            .col-date {
+                width: 18%;
+                min-width: 60px;
+            }
+
+            .col-rcvd {
+                width: 18%;
+                min-width: 56px;
+            }
+
+            .col-party {
+                width: 24%;
+                min-width: 76px;
+            }
+
+            .col-in {
+                width: 14%;
+                min-width: 44px;
+            }
+
+            .col-out {
+                width: 14%;
+                min-width: 44px;
+            }
+
+            .col-save {
+                width: 12%;
+                min-width: 44px;
+            }
+
+            .date-cell {
+                font-size: 9px;
+            }
+
+            .rcvd-select {
+                font-size: 9px;
+            }
+
+            .party-select {
+                font-size: 9px;
+            }
+        }
+
+        tbody td {
+            vertical-align: middle;
+        }
+
+        /* Date cell */
+        .date-cell {
+            width: 100%;
+            height: 100%;
+            min-height: 24px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+        }
+
+        .date-cell input[type="date"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        /* Shared select styles */
+        .rcvd-select,
+        .party-select {
+            width: 100%;
+            height: 100%;
+            min-height: 24px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            padding: 0 4px;
+            color: #000;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        /* Amount IN / OUT number inputs */
+        .amount-input {
+            width: 100%;
+            height: 100%;
+            min-height: 24px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: Arial, sans-serif;
+            padding: 0 4px;
+            text-align: center;
+            color: #000;
+            -moz-appearance: textfield;
+        }
+
+        .amount-input::-webkit-outer-spin-button,
+        .amount-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        @media (min-width: 1024px) {
+            .amount-input {
+                font-size: 12px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .amount-input {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .amount-input {
+                font-size: 9px;
+            }
+        }
+
+        /* ── Save button ── */
+        .save-btn {
+            display: block;
+            width: calc(100% - 6px);
+            margin: 0 3px;
+            padding: 2px 0;
+            border: 1px solid #2a7a2a;
+            border-radius: 3px;
+            background: #e8f5e8;
+            color: #1a5c1a;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .save-btn:hover {
+            background: #2a7a2a;
+            color: #fff;
+        }
+
+        /* Saved state */
+        .save-btn.saved {
+            background: #2a7a2a;
+            color: #fff;
+            border-color: #1a5c1a;
+        }
+
+        /* Unsaved (dirty) state */
+        .save-btn.dirty {
+            background: #fff8e1;
+            border-color: #e6a800;
+            color: #7a5800;
+        }
+
+        @media (min-width: 1024px) {
+            .save-btn {
+                font-size: 11px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .save-btn {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .save-btn {
+                font-size: 8px;
+            }
+        }
+
+        /* Saved row highlight (fades out) */
+        tr.row-saved td {
+            background: #f0faf0;
+            transition: background 1s ease;
+        }
+
+        tr.row-saved-done td {
+            background: transparent;
+            transition: background 1.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <h1
+        style="text-align:center; font-family:Arial,sans-serif; font-size:22px; font-weight:bold; letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; border-bottom:2px solid #000; padding-bottom:8px;">
+        AMOUNT</h1>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-date" rowspan="2">DATE</th>
+                    <th class="col-rcvd" rowspan="2">RCVD BY</th>
+                    <th class="col-party" rowspan="2">PARTY / PARTICULAR</th>
+                    <th colspan="2">AMOUNT</th>
+                    <th class="col-save" rowspan="2">SAVE</th>
+                </tr>
+                <tr>
+                    <th class="col-in">IN</th>
+                    <th class="col-out">OUT</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const ROWS = 30;
+        const STORAGE_KEY = 'amount_ledger_rows';
+
+        const names = ['B.MURUGAN', 'R.GANAPATHY', 'V.KANDIPAN'];
+        const parties = [
+            'SS PET', 'ALL PET', 'SVL', 'SVL2', 'AK PET',
+            'MDC KUSHAL', 'MDC U/B', 'AMMAN PET', 'BABU AQUA',
+            'PONNI PLASTIC', 'VS PET', 'KANISKA AQUA', 'SATHIYA AQUA'
+        ];
+
+        const rcvdOptions = `<option value=""></option>` +
+            names.map(n => `<option value="${n}">${n}</option>`).join('');
+        const partyOptions = `<option value=""></option>` +
+            parties.map(p => `<option value="${p}">${p}</option>`).join('');
+
+        const tbody = document.getElementById('tbody');
+
+        // Load saved data
+        let savedData = {};
+        try { savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (e) { }
+
+        for (let i = 0; i < ROWS; i++) {
+            const tr = document.createElement('tr');
+            tr.dataset.row = i;
+            tr.innerHTML = `
+                <td><div class="date-cell" onclick="pickDate(this)">
+                    <input type="date" onchange="showDate(this); markDirty(${i})">
+                    <span></span>
+                </div></td>
+                <td><select class="rcvd-select"  onchange="markDirty(${i})">${rcvdOptions}</select></td>
+                <td><select class="party-select" onchange="markDirty(${i})">${partyOptions}</select></td>
+                <td><input class="amount-input" type="number" min="0" step="0.01" oninput="markDirty(${i})"></td>
+                <td><input class="amount-input" type="number" min="0" step="0.01" oninput="markDirty(${i})"></td>
+                <td><button class="save-btn" onclick="saveRow(${i})">SAVE</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            // Restore saved row if exists
+            if (savedData[i]) restoreRow(tr, savedData[i]);
+        }
+
+        function pickDate(div) {
+            const input = div.querySelector('input[type="date"]');
+            try { if (input.showPicker) input.showPicker(); else input.click(); }
+            catch (e) { input.click(); }
+        }
+
+        function showDate(input) {
+            const span = input.nextElementSibling;
+            if (input.value) {
+                const [y, m, d] = input.value.split('-');
+                span.textContent = d + '-' + m + '-' + y;
+            } else {
+                span.textContent = '';
+            }
+        }
+
+        function markDirty(rowIdx) {
+            const tr = tbody.querySelector(`tr[data-row="${rowIdx}"]`);
+            const btn = tr.querySelector('.save-btn');
+            btn.classList.remove('saved');
+            btn.classList.add('dirty');
+            btn.textContent = 'SAVE';
+        }
+
+        function saveRow(rowIdx) {
+            const tr = tbody.querySelector(`tr[data-row="${rowIdx}"]`);
+            const dateInput = tr.querySelector('input[type="date"]');
+            const rcvd = tr.querySelector('.rcvd-select').value;
+            const party = tr.querySelector('.party-select').value;
+            const amtIn = tr.querySelectorAll('.amount-input')[0].value;
+            const amtOut = tr.querySelectorAll('.amount-input')[1].value;
+
+            const rowData = {
+                date: dateInput.value,
+                rcvd,
+                party,
+                amtIn,
+                amtOut
+            };
+
+            // Persist
+            savedData[rowIdx] = rowData;
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch (e) { }
+
+            // Button feedback
+            const btn = tr.querySelector('.save-btn');
+            btn.classList.remove('dirty');
+            btn.classList.add('saved');
+            btn.textContent = '✓ SAVED';
+
+            // Row flash
+            tr.classList.add('row-saved');
+            setTimeout(() => {
+                tr.classList.add('row-saved-done');
+                setTimeout(() => {
+                    tr.classList.remove('row-saved', 'row-saved-done');
+                }, 1500);
+            }, 100);
+        }
+
+        function restoreRow(tr, data) {
+            const dateInput = tr.querySelector('input[type="date"]');
+            dateInput.value = data.date || '';
+            if (data.date) {
+                const [y, m, d] = data.date.split('-');
+                tr.querySelector('.date-cell span').textContent = d + '-' + m + '-' + y;
+            }
+            tr.querySelector('.rcvd-select').value = data.rcvd || '';
+            tr.querySelector('.party-select').value = data.party || '';
+            const inputs = tr.querySelectorAll('.amount-input');
+            inputs[0].value = data.amtIn || '';
+            inputs[1].value = data.amtOut || '';
+
+            // Mark as already saved
+            const btn = tr.querySelector('.save-btn');
+            if (data.date || data.rcvd || data.party || data.amtIn || data.amtOut) {
+                btn.classList.add('saved');
+                btn.textContent = '✓ SAVED';
+            }
+        }
+    </script>
+</body>
+
+</html>

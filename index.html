@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ELITE — Daily Operations</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Barlow', sans-serif;
+            background: #0f1624;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── TOP NAV BAR ── */
+        .nav {
+            background: linear-gradient(90deg, #0f1624 0%, #1a2540 100%);
+            border-bottom: 2px solid #2a3a5c;
+            display: flex;
+            align-items: stretch;
+            padding: 0 1.2rem;
+            gap: 0;
+            flex-shrink: 0;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+            height: 52px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-right: 1.6rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            margin-right: 0.8rem;
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #f5c842, #e6a200);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 1rem;
+            color: #1a1d26;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .nav-brand-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 1.15rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #f5c842;
+            white-space: nowrap;
+        }
+
+        .nav-brand-sub {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.6rem;
+            color: #7a88aa;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+
+        .tabs {
+            display: flex;
+            align-items: stretch;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 18px;
+            border: none;
+            border-radius: 5px;
+            background: transparent;
+            color: #8898bb;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(245, 200, 66, 0.08);
+            color: #c5d4f0;
+        }
+
+        .tab.active {
+            background: rgba(245, 200, 66, 0.15);
+            color: #f5c842;
+            box-shadow: inset 0 -2px 0 #f5c842;
+        }
+
+        .tab-icon {
+            font-size: 1rem;
+        }
+
+        .tab-num {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.68rem;
+            color: inherit;
+            margin-left: 2px;
+        }
+
+        .tab.active .tab-num {
+            background: rgba(245, 200, 66, 0.25);
+        }
+
+        /* ── IFRAME CONTAINER ── */
+        .frame-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+            background: #fff;
+        }
+
+        iframe.visible {
+            display: block;
+        }
+
+        /* ── STATUS BAR ── */
+        .statusbar {
+            background: #0b1120;
+            border-top: 1px solid #1e2d4a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .sb-label {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.62rem;
+            color: #465577;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .sb-page {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.68rem;
+            color: #607090;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .nav-brand-name {
+                display: none;
+            }
+
+            .nav-brand {
+                padding-right: 0.8rem;
+                margin-right: 0.4rem;
+            }
+
+            .tab {
+                padding: 0 10px;
+                font-size: 0.75rem;
+                gap: 4px;
+            }
+
+            .tab-num {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <div class="nav-logo">EL</div>
+            <div>
+                <div class="nav-brand-name">Elite Preforms</div>
+                <div class="nav-brand-sub">Daily Operations</div>
+            </div>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab(1, this)">
+                <span class="tab-icon">📋</span>
+                Production
+                <span class="tab-num">1</span>
+            </button>
+            <button class="tab" onclick="showTab(2, this)">
+                <span class="tab-icon">📒</span>
+                Daily Log
+                <span class="tab-num">2</span>
+            </button>
+            <button class="tab" onclick="showTab(3, this)">
+                <span class="tab-icon">💰</span>
+                Amount
+                <span class="tab-num">3</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- FRAMES -->
+    <div class="frame-container">
+        <iframe id="frame1" src="daily_production.html" class="visible" title="Daily Production Sheet"></iframe>
+        <iframe id="frame2" src="daily.html" title="Daily Log Sheet"></iframe>
+        <iframe id="frame3" src="amount.html" title="Amount Ledger"></iframe>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="statusbar">
+        <span class="sb-label">Elite Preforms — Operations Dashboard</span>
+        <span class="sb-page" id="sbPage">Page 1 of 3 — Daily Production Sheet</span>
+    </div>
+
+    <script>
+        const pages = [
+            null,
+            { id: 'frame1', label: 'Page 1 of 3 — Daily Production Sheet' },
+            { id: 'frame2', label: 'Page 2 of 3 — Daily Log Sheet' },
+            { id: 'frame3', label: 'Page 3 of 3 — Amount Ledger' },
+        ];
+
+        let current = 1;
+
+        function showTab(n, btn) {
+            // Hide all frames
+            document.querySelectorAll('iframe').forEach(f => f.classList.remove('visible'));
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+            // Show selected frame
+            document.getElementById(pages[n].id).classList.add('visible');
+            // Activate tab
+            btn.classList.add('active');
+            // Update status bar
+            document.getElementById('sbPage').textContent = pages[n].label;
+            current = n;
+        }
+
+        // Keyboard shortcuts: Ctrl+1, Ctrl+2, Ctrl+3
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key >= '1' && e.key <= '3') {
+                e.preventDefault();
+                const n = parseInt(e.key);
+                const tabs = document.querySelectorAll('.tab');
+                showTab(n, tabs[n - 1]);
+            }
+        });
+
+        /* ── CAPACITY & REJECTS RELAY: frame1 (Production) → frame2 (Daily Log) ── */
+        window.addEventListener('message', function (e) {
+            if (!e.data || (e.data.type !== 'elite_capacity' && e.data.type !== 'elite_rejects')) return;
+            const frame2 = document.getElementById('frame2');
+            if (frame2 && frame2.contentWindow) {
+                frame2.contentWindow.postMessage(e.data, '*');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

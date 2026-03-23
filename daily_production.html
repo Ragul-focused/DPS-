@@ -1,0 +1,3023 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Production Sheet</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;500&family=Barlow:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #e8ecf0;
+            --white: #ffffff;
+            --border: #a0a8b8;
+            --border-dark: #444c60;
+            --text: #111520;
+            --text-dim: #444c60;
+            --text-muted: #7a8099;
+            --accent: #1a3a6b;
+            --cell-h: 28px;
+            --auto-bg: #eef6ff;
+            --auto-color: #1a3a6b;
+            --flow-bg: #f0fff4;
+            --flow-color: #065f46;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Barlow', sans-serif;
+            color: var(--text);
+        }
+
+        /* ─── TOOLBAR ─── */
+        .toolbar {
+            background: #1a2540;
+            color: #fff;
+            padding: 0.6rem 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .toolbar-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #f5c842;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .tb-date {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .tb-date input[type="date"] {
+            background: transparent;
+            border: none;
+            color: #f5c842;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            width: 125px;
+        }
+
+        .tb-date input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) sepia(1) saturate(3) hue-rotate(5deg);
+            cursor: pointer;
+        }
+
+        .print-btn {
+            background: #f5c842;
+            color: #1a1d26;
+            border: none;
+            border-radius: 4px;
+            padding: 0.38rem 1.1rem;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 0.88rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .print-btn:hover {
+            background: #ffd86b;
+        }
+
+        /* ─── SHEET ─── */
+        .sheet-wrapper {
+            max-width: 1260px;
+            margin: 1.2rem auto;
+            padding: 0 0.8rem;
+        }
+
+        .sheet {
+            background: var(--white);
+            border: 1px solid #bbb;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.13);
+        }
+
+        /* ─── TITLE ─── */
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px 4px;
+            border-bottom: 2px solid var(--text);
+        }
+
+        .main-title {
+            flex: 1;
+            text-align: center;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 1.45rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .date-block {
+            text-align: right;
+            white-space: nowrap;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+
+        .date-block input[type="date"] {
+            border: none;
+            border-bottom: 1px solid var(--border-dark);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            color: var(--accent);
+            outline: none;
+            background: transparent;
+            width: 125px;
+        }
+
+        /* ─── 3-COLUMN SHIFTS ─── */
+        .three-shifts {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-top: 1px solid var(--text);
+        }
+
+        .sc-wrap {
+            border-right: 2px solid var(--text);
+        }
+
+        .sc-wrap:last-child {
+            border-right: none;
+        }
+
+        .shift-lbl {
+            text-align: center;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 0;
+            border-bottom: 1px solid var(--text);
+        }
+
+        .sa .shift-lbl {
+            color: #7a3a00;
+            background: #fffaf2;
+        }
+
+        .sb .shift-lbl {
+            color: #0a4d6e;
+            background: #f2f8ff;
+        }
+
+        .sc .shift-lbl {
+            color: #4a006e;
+            background: #fdf2ff;
+        }
+
+        /* form rows */
+        .fr {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid var(--border);
+            min-height: var(--cell-h);
+        }
+
+        .fr-lbl {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #000;
+            white-space: nowrap;
+            padding: 1px 5px;
+            min-width: 105px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border);
+            background: #fafbfc;
+        }
+
+        .fr-in {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* editable inputs */
+        .fr-in input[type="number"],
+        .fr-in input[type="text"] {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.73rem;
+            padding: 1px 5px;
+            background: transparent;
+            color: var(--text);
+            min-height: var(--cell-h);
+        }
+
+        .fr-in input:focus {
+            background: #fffbe8;
+        }
+
+        /* auto-calculated (readonly) inputs */
+        .fr-in input.auto-calc {
+            background: var(--auto-bg) !important;
+            color: var(--auto-color);
+            font-weight: 600;
+            cursor: not-allowed;
+        }
+
+        /* flow-linked (carried from prev shift) */
+        .fr-in input.flow-in {
+            background: var(--flow-bg) !important;
+            color: var(--flow-color);
+            font-weight: 600;
+            cursor: not-allowed;
+        }
+
+        /* DROPDOWN SELECTS */
+        .fr-in select {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            padding: 1px 4px;
+            background: transparent;
+            color: var(--text);
+            min-height: var(--cell-h);
+            cursor: pointer;
+            appearance: auto;
+        }
+
+        .fr-in select:focus {
+            background: #fffbe8;
+        }
+
+        .fr-in select option {
+            background: #fff;
+            color: var(--text);
+        }
+
+        /* auto-calc badge on label — hidden */
+        .lbl-auto {
+            display: none;
+        }
+
+        /* flow badge on label — hidden */
+        .lbl-flow {
+            display: none;
+        }
+
+        /* machine header */
+        .mach-hdr {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 0.92rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-bottom: 1px solid var(--border-dark);
+            background: #f0f2f5;
+            color: var(--accent);
+        }
+
+        /* rejection row — label + 2 editable + 1 auto */
+        .rej-row {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid var(--border);
+            min-height: var(--cell-h);
+        }
+
+        .rej-box {
+            flex: 1;
+            border-left: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+
+        .rej-box input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.73rem;
+            padding: 1px 4px;
+            background: transparent;
+            min-height: var(--cell-h);
+            color: var(--text);
+        }
+
+        .rej-box input:focus {
+            background: #fffbe8;
+        }
+
+        .rej-box input.auto-calc {
+            background: var(--auto-bg) !important;
+            color: var(--auto-color);
+            font-weight: 600;
+            cursor: not-allowed;
+        }
+
+        /* scrap */
+        .scrap-r {
+            display: flex;
+            align-items: stretch;
+            border-top: 1px solid var(--border-dark);
+            border-bottom: 1px solid var(--border-dark);
+            min-height: var(--cell-h);
+            background: #fdf5f5;
+        }
+
+        .scrap-r .s-lbl {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 0.67rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 1px 4px;
+            color: #8b0000;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .scrap-r .s-pl {
+            font-weight: 700;
+            font-size: 0.65rem;
+            padding: 0 3px;
+            display: flex;
+            align-items: center;
+            color: #8b0000;
+        }
+
+        .scrap-r .s-box {
+            flex: 1;
+            border-left: 1px solid var(--border);
+        }
+
+        .scrap-r .s-box input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.73rem;
+            padding: 1px 4px;
+            background: transparent;
+            min-height: var(--cell-h);
+        }
+
+        .scrap-r .s-box input:focus {
+            background: #fffbe8;
+        }
+
+        /* wide row */
+        .wide-r {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid var(--border);
+            min-height: 26px;
+        }
+
+        .wide-r input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 1px 5px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.73rem;
+            background: transparent;
+            min-height: 26px;
+        }
+
+        .wide-r input:focus {
+            background: #fffbe8;
+        }
+
+        .wide-r .mini {
+            width: 55px;
+            border-left: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+
+        .wide-r .mini input {
+            padding: 1px 3px;
+        }
+
+        /* bottle label */
+        .btl-lbl {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 0.95rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 3px 0;
+            border-top: 1px solid var(--border-dark);
+            border-bottom: 1px solid var(--border-dark);
+            background: #f5f7fa;
+            color: #0e6e6e;
+        }
+
+        /* bottle table */
+        .bt {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bt th {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            padding: 2px 2px;
+            border: 1px solid var(--border);
+            background: #f0f2f5;
+            color: #000;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .bt td {
+            border: 1px solid var(--border);
+            height: var(--cell-h);
+            padding: 0;
+        }
+
+        .bt td input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 1px 3px;
+            background: transparent;
+            color: var(--text);
+            text-align: center;
+            min-height: var(--cell-h);
+        }
+
+        .bt td input:focus {
+            background: #fffbe8;
+        }
+
+        .bt .cn-td input {
+            text-align: left;
+        }
+
+        .bt .cos {
+            width: 14%;
+        }
+
+        .bt .cpb {
+            width: 16%;
+        }
+
+        .bt .ccn {
+            width: 40%;
+        }
+
+        .bt .csl {
+            width: 14%;
+        }
+
+        .bt .ccs {
+            width: 16%;
+        }
+
+        /* add row btn */
+        .add-row-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            border: none;
+            border-top: 1px dashed var(--border);
+            background: #f9fafb;
+            cursor: pointer;
+            padding: 3px 8px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.68rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #0e6e6e;
+            transition: background 0.15s;
+        }
+
+        .add-row-btn:hover {
+            background: #e8f5f5;
+            color: #085050;
+        }
+
+        .add-row-btn::before {
+            content: '＋';
+            font-size: 0.8rem;
+        }
+
+        /* validation error flash */
+        input.err {
+            border: 1px solid #e53e3e !important;
+            background: #fff5f5 !important;
+        }
+
+        /* legend strip */
+        .legend-strip {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 4px 10px;
+            background: #f8f9fb;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.62rem;
+            font-family: 'Barlow', sans-serif;
+            color: var(--text-dim);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .dot-auto {
+            background: var(--auto-bg);
+            border: 1px solid var(--accent);
+        }
+
+        .dot-flow {
+            background: var(--flow-bg);
+            border: 1px solid #065f46;
+        }
+
+        .dot-edit {
+            background: #fff;
+            border: 1px solid var(--border);
+        }
+
+        /* ─── closing stock auto-calc (page 1 bottle tables + page 2 size tables) ─── */
+        .st td.p2-close input,
+        .bt td.p2-close input {
+            background: var(--auto-bg) !important;
+            color: var(--auto-color);
+            font-weight: 600;
+            cursor: not-allowed;
+        }
+
+        /* ─── PAGE 2 ─── */
+        .p2 {
+            border-top: 3px solid var(--text);
+        }
+
+        .sg {
+            border-bottom: 2px solid var(--border-dark);
+        }
+
+        .sg:last-child {
+            border-bottom: none;
+        }
+
+        .sg-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .ssb {
+            border-right: 2px solid var(--border-dark);
+        }
+
+        .ssb:last-child {
+            border-right: none;
+        }
+
+        .st {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .st th {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            padding: 2px 2px;
+            border: 1px solid var(--border);
+            background: #f0f2f5;
+            color: #000;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .st th.sn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 1rem;
+            color: var(--text);
+            background: #fff;
+            border: 1px solid var(--border-dark);
+        }
+
+        .st td {
+            border: 1px solid var(--border);
+            height: var(--cell-h);
+            padding: 0;
+        }
+
+        .st td input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 1px 3px;
+            background: transparent;
+            color: var(--text);
+            text-align: center;
+            min-height: var(--cell-h);
+        }
+
+        .st td input:focus {
+            background: #fffbe8;
+        }
+
+        .st .cos {
+            width: 20%;
+        }
+
+        .st .cpb {
+            width: 20%;
+        }
+
+        .st .cnm {
+            width: 30%;
+        }
+
+        .st .csl {
+            width: 15%;
+        }
+
+        .st .ccs {
+            width: 15%;
+        }
+
+        .add-row-btn2 {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            border: none;
+            border-top: 1px dashed var(--border);
+            background: #f9fafb;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.65rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #0e6e6e;
+            transition: background 0.15s;
+        }
+
+        .add-row-btn2:hover {
+            background: #e8f5f5;
+            color: #085050;
+        }
+
+        .add-row-btn2::before {
+            content: '＋';
+            font-size: 0.75rem;
+        }
+
+        /* ─── RESPONSIVE (tablet) ─── */
+        @media (max-width: 900px) {
+            .three-shifts {
+                grid-template-columns: 1fr;
+            }
+
+            .sc-wrap {
+                border-right: none;
+                border-bottom: 2px solid var(--text);
+            }
+
+            .sg-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .ssb {
+                border-right: none;
+                border-bottom: 1px solid var(--border-dark);
+            }
+
+            .sheet-wrapper {
+                padding: 0 0.3rem;
+            }
+
+            :root {
+                --cell-h: 36px;
+            }
+
+            .fr-lbl {
+                font-size: 0.65rem;
+                min-width: 115px;
+            }
+
+            .bt td input,
+            .st td input {
+                font-size: 0.78rem;
+            }
+        }
+
+        /* ─── PRINT ─── */
+        @media print {
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: #fff;
+            }
+
+            .toolbar,
+            .legend-strip {
+                display: none !important;
+            }
+
+            .add-row-btn,
+            .add-row-btn2 {
+                display: none !important;
+            }
+
+            .sheet-wrapper {
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .sheet {
+                box-shadow: none;
+                border: none;
+            }
+
+            .p2 {
+                page-break-before: always;
+            }
+
+            .sg {
+                page-break-inside: avoid;
+            }
+
+            .three-shifts {
+                grid-template-columns: 1fr 1fr 1fr !important;
+            }
+
+            .sg-inner {
+                grid-template-columns: 1fr 1fr 1fr !important;
+            }
+
+            .sc-wrap {
+                border-right: 2px solid #333 !important;
+                border-bottom: none !important;
+            }
+
+            .ssb {
+                border-right: 2px solid #888 !important;
+                border-bottom: none !important;
+            }
+
+            input.auto-calc {
+                background: #eef6ff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            input.flow-in {
+                background: #f0fff4 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            @page {
+                size: A4 landscape;
+                margin: 7mm;
+            }
+        }
+
+        /* ─── SHIFT FREEZE / SAVE BUTTON ─── */
+        .shift-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px 8px;
+            border-top: 2px dashed var(--border);
+            margin-top: 6px;
+            gap: 8px;
+        }
+
+        .save-shift-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #1a3a6b, #0e6e6e);
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .save-shift-btn:hover {
+            background: linear-gradient(135deg, #133060, #085050);
+            transform: translateY(-1px);
+        }
+
+        .save-shift-btn.locked {
+            background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+        }
+
+        .save-shift-btn.locked:hover {
+            background: linear-gradient(135deg, #991b1b, #6b1414);
+        }
+
+        .lock-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 0.72rem;
+            color: #065f46;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .lock-badge.visible {
+            display: flex;
+        }
+
+        .sc-wrap.frozen,
+        .ssb.frozen {
+            opacity: 0.92;
+            border: 2px solid #6ee7b7 !important;
+        }
+
+        .sc-wrap.frozen *,
+        .ssb.frozen * {
+            pointer-events: none;
+        }
+
+        .sc-wrap.frozen .save-shift-btn,
+        .sc-wrap.frozen .lock-badge,
+        .ssb.frozen .save-shift-btn,
+        .ssb.frozen .lock-badge {
+            pointer-events: auto;
+        }
+
+        /* ─── ALL-SHIFTS SAVE FOOTER BAR ─── */
+        .all-shifts-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0;
+            border-top: 3px solid var(--border-dark);
+            background: #f0f2f5;
+        }
+
+        .asf-block {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        .asf-block:last-child {
+            border-right: none;
+        }
+
+        .asf-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* ─── GLOBAL SUBMIT BUTTON ─── */
+        .submit-section {
+            padding: 1.5rem;
+            text-align: center;
+            background: #e8ecf0;
+            border-top: 2px dashed var(--border);
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .final-submit-btn {
+            background: linear-gradient(135deg, #0e6e6e, #1a3a6b);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .final-submit-btn:hover {
+            background: linear-gradient(135deg, #0b5555, #132b50);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .final-submit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ── Company Name dropdown ── */
+        .cn-select {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 1px 3px;
+            background: transparent;
+            color: var(--text);
+            min-height: var(--cell-h);
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .cn-select:focus {
+            background: #fffbe8;
+        }
+
+        .cn-select option {
+            background: #fff;
+            color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="toolbar-title">📋 Daily Production Sheet</div>
+        <div class="toolbar-right">
+            <div class="tb-date">DATE: <input type="date" id="tbDate" onchange="syncDate(this.value)" /></div>
+            <button class="print-btn" onclick="window.print()">🖨 Print</button>
+        </div>
+    </div>
+
+    <div class="sheet-wrapper">
+        <div class="sheet">
+
+            <!-- title -->
+            <div class="title-row">
+                <div style="width:70px"></div>
+                <div class="main-title">Daily Production Sheet</div>
+                <div class="date-block">DATE:<br><input type="date" id="shDate" onchange="syncDate(this.value)" /></div>
+            </div>
+
+            <!-- legend -->
+            <div class="legend-strip">
+                <div class="legend-item">
+                    <div class="legend-dot dot-edit"></div> User Input
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-auto"></div> Auto-Calculated
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-flow"></div> Carried from Previous Shift
+                </div>
+            </div>
+
+            <!-- ═══════════════ 3 SHIFTS ═══════════════ -->
+            <div class="three-shifts">
+
+                <!-- ══════════════════════════════
+     SHIFT A
+══════════════════════════════ -->
+                <div class="sc-wrap sa">
+                    <div class="shift-lbl">Shift — A</div>
+
+                    <div class="fr">
+                        <div class="fr-lbl">Operator Name</div>
+                        <div class="fr-in">
+                            <select id="opA">
+                                <option value="">— SELECT —</option>
+                                <option>V.KANDIPAN</option>
+                                <option>R.GANAPATHY</option>
+                                <option>B.MURUGAN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ── M-1 ── -->
+                    <div class="mach-hdr">M-1</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-1)</div>
+                        <div class="fr-in">
+                            <select id="h1A">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capA_m1" onchange="calcProdA_m1()">
+                                <option value="">— Select —</option>
+                                <option value="tA300">300 ml</option>
+                                <option value="tA500">500 ml</option>
+                                <option value="sAN">N</option>
+                                <option value="sAG">G</option>
+                                <option value="sA1L">1 L</option>
+                                <option value="sA2L">2 L</option>
+                                <option value="sA92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Opening Stock = Prev Closing + Raw Material -->
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="prevCloseA_m1" placeholder="0"
+                                oninput="calcOpenA_m1()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawA_m1" placeholder="0"
+                                oninput="calcOpenA_m1()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openA_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodA_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <!-- Rejection: box1 + box2 = total (auto) -->
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1A_m1" placeholder="R1"
+                                oninput="calcRejA_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2A_m1" placeholder="R2"
+                                oninput="calcRejA_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTA_m1" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+
+                    <!-- Closing Stock = Opening - Total Production - Total Rejection (auto) -->
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeA_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <!-- ── M-2 ── -->
+                    <div class="mach-hdr">M-2</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-2)</div>
+                        <div class="fr-in">
+                            <select id="h2A">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capA_m2" onchange="calcProdA_m2()">
+                                <option value="">— Select —</option>
+                                <option value="tA300">300 ml</option>
+                                <option value="tA500">500 ml</option>
+                                <option value="sAN">N</option>
+                                <option value="sAG">G</option>
+                                <option value="sA1L">1 L</option>
+                                <option value="sA2L">2 L</option>
+                                <option value="sA92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="prevCloseA_m2" placeholder="0"
+                                oninput="calcOpenA_m2()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawA_m2" placeholder="0"
+                                oninput="calcOpenA_m2()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openA_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodA_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1A_m2" placeholder="R1"
+                                oninput="calcRejA_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2A_m2" placeholder="R2"
+                                oninput="calcRejA_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTA_m2" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeA_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <div class="scrap-r">
+                        <span class="s-lbl">Total Scrap</span><span class="s-pl">P-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <span class="s-pl">L-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                    </div>
+                    <div class="wide-r"><input type="text" />
+                        <div class="mini"><input type="text" /></div>
+                    </div>
+
+                    <div class="btl-lbl">300 ml</div>
+                    <table class="bt" id="tA300">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tA300')">Add Row</button>
+
+                    <div class="btl-lbl">500 ML</div>
+                    <table class="bt" id="tA500">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tA500')">Add Row</button>
+                </div><!-- /shift-a -->
+
+                <!-- ══════════════════════════════
+     SHIFT B  (Opening = Shift A Closing + Raw)
+══════════════════════════════ -->
+                <div class="sc-wrap sb">
+                    <div class="shift-lbl">Shift — B</div>
+
+                    <div class="fr">
+                        <div class="fr-lbl">Operator Name</div>
+                        <div class="fr-in">
+                            <select id="opB">
+                                <option value="">— SELECT —</option>
+                                <option>V.KANDIPAN</option>
+                                <option>R.GANAPATHY</option>
+                                <option>B.MURUGAN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mach-hdr">M-1</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-1)</div>
+                        <div class="fr-in">
+                            <select id="h1B">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capB_m1" onchange="calcProdB_m1()">
+                                <option value="">— Select —</option>
+                                <option value="tB300">300 ml</option>
+                                <option value="tB500">500 ml</option>
+                                <option value="sBN">N</option>
+                                <option value="sBG">G</option>
+                                <option value="sB1L">1 L</option>
+                                <option value="sB2L">2 L</option>
+                                <option value="sB92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Prev Closing = Shift A Closing (auto-flowed) -->
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-flow">↑ Shift A</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prevCloseB_m1" class="flow-in" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawB_m1" placeholder="0"
+                                oninput="calcOpenB_m1()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openB_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodB_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1B_m1" placeholder="R1"
+                                oninput="calcRejB_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2B_m1" placeholder="R2"
+                                oninput="calcRejB_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTB_m1" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeB_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <div class="mach-hdr">M-2</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-2)</div>
+                        <div class="fr-in">
+                            <select id="h2B">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capB_m2" onchange="calcProdB_m2()">
+                                <option value="">— Select —</option>
+                                <option value="tB300">300 ml</option>
+                                <option value="tB500">500 ml</option>
+                                <option value="sBN">N</option>
+                                <option value="sBG">G</option>
+                                <option value="sB1L">1 L</option>
+                                <option value="sB2L">2 L</option>
+                                <option value="sB92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-flow">↑ Shift A</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prevCloseB_m2" class="flow-in" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawB_m2" placeholder="0"
+                                oninput="calcOpenB_m2()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openB_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodB_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1B_m2" placeholder="R1"
+                                oninput="calcRejB_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2B_m2" placeholder="R2"
+                                oninput="calcRejB_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTB_m2" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeB_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <div class="scrap-r">
+                        <span class="s-lbl">Total Scrap</span><span class="s-pl">P-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <span class="s-pl">L-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                    </div>
+                    <div class="wide-r"><input type="text" />
+                        <div class="mini"><input type="text" /></div>
+                    </div>
+
+                    <div class="btl-lbl">300 ml</div>
+                    <table class="bt" id="tB300">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tB300')">Add Row</button>
+
+                    <div class="btl-lbl">500 ML</div>
+                    <table class="bt" id="tB500">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tB500')">Add Row</button>
+                </div><!-- /shift-b -->
+
+                <!-- ══════════════════════════════
+     SHIFT C  (Opening = Shift B Closing + Raw)
+══════════════════════════════ -->
+                <div class="sc-wrap sc">
+                    <div class="shift-lbl">Shift — C</div>
+
+                    <div class="fr">
+                        <div class="fr-lbl">Operator Name</div>
+                        <div class="fr-in">
+                            <select id="opC">
+                                <option value="">— SELECT —</option>
+                                <option>V.KANDIPAN</option>
+                                <option>R.GANAPATHY</option>
+                                <option>B.MURUGAN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mach-hdr">M-1</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-1)</div>
+                        <div class="fr-in">
+                            <select id="h1C">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capC_m1" onchange="calcProdC_m1()">
+                                <option value="">— Select —</option>
+                                <option value="tC300">300 ml</option>
+                                <option value="tC500">500 ml</option>
+                                <option value="sCN">N</option>
+                                <option value="sCG">G</option>
+                                <option value="sC1L">1 L</option>
+                                <option value="sC2L">2 L</option>
+                                <option value="sC92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-flow">↑ Shift B</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prevCloseC_m1" class="flow-in" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawC_m1" placeholder="0"
+                                oninput="calcOpenC_m1()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openC_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodC_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1C_m1" placeholder="R1"
+                                oninput="calcRejC_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2C_m1" placeholder="R2"
+                                oninput="calcRejC_m1()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTC_m1" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeC_m1" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <div class="mach-hdr">M-2</div>
+                    <div class="fr">
+                        <div class="fr-lbl">Helper (M-2)</div>
+                        <div class="fr-in">
+                            <select id="h2C">
+                                <option value="">— SELECT —</option>
+                                <option>MAHENDRAN</option>
+                                <option>ANANDHAN</option>
+                                <option>MOHAN</option>
+                                <option>MUGILAN</option>
+                                <option>SUBASH</option>
+                                <option>SANJAY</option>
+                                <option>OTHER 1</option>
+                                <option>OTHER 2</option>
+                                <option>OTHER 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Capacity</div>
+                        <div class="fr-in">
+                            <select id="capC_m2" onchange="calcProdC_m2()">
+                                <option value="">— Select —</option>
+                                <option value="tC300">300 ml</option>
+                                <option value="tC500">500 ml</option>
+                                <option value="sCN">N</option>
+                                <option value="sCG">G</option>
+                                <option value="sC1L">1 L</option>
+                                <option value="sC2L">2 L</option>
+                                <option value="sC92">9.2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-lbl">Prev. Closing<span class="lbl-flow">↑ Shift B</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prevCloseC_m2" class="flow-in" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Raw Material<span class="lbl-auto">INPUT</span></div>
+                        <div class="fr-in"><input type="number" step="any" min="0" id="rawC_m2" placeholder="0"
+                                oninput="calcOpenC_m2()" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Opening Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="openC_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Total Production<span class="lbl-auto">AUTO ×20</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="prodC_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+                    <div class="rej-row">
+                        <div class="fr-lbl">Total Rejection</div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej1C_m2" placeholder="R1"
+                                oninput="calcRejC_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" min="0" id="rej2C_m2" placeholder="R2"
+                                oninput="calcRejC_m2()" /></div>
+                        <div class="rej-box"><input type="number" step="any" id="rejTC_m2" class="auto-calc" readonly
+                                placeholder="Total" /></div>
+                    </div>
+                    <div class="fr">
+                        <div class="fr-lbl">Closing Stock<span class="lbl-auto">AUTO</span></div>
+                        <div class="fr-in"><input type="number" step="any" id="closeC_m2" class="auto-calc" readonly
+                                placeholder="0" /></div>
+                    </div>
+
+                    <div class="scrap-r">
+                        <span class="s-lbl">Total Scrap</span><span class="s-pl">P-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <span class="s-pl">L-</span>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                        <div class="s-box"><input type="number" step="any" min="0" placeholder="0" /></div>
+                    </div>
+                    <div class="wide-r"><input type="text" />
+                        <div class="mini"><input type="text" /></div>
+                    </div>
+
+                    <div class="btl-lbl">300 ml</div>
+                    <table class="bt" id="tC300">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tC300')">Add Row</button>
+
+                    <div class="btl-lbl">500 ML</div>
+                    <table class="bt" id="tC500">
+                        <thead>
+                            <tr>
+                                <th class="cos">Opening<br>Stock</th>
+                                <th class="cpb">Production<br>Bags</th>
+                                <th class="ccn">Company Name</th>
+                                <th class="csl">Sale</th>
+                                <th class="ccs">Closing<br>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td class="cn-td"><input type="text" /></td>
+                                <td><input type="number" step="any" /></td>
+                                <td><input type="number" step="any" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBtRow('tC500')">Add Row</button>
+                </div><!-- /shift-c -->
+
+            </div><!-- /three-shifts -->
+
+            <!-- ═══════════════ PAGE 2 — STOCK TRACKER ═══════════════ -->
+            <div class="p2">
+
+                <!-- N -->
+                <div class="sg">
+                    <div class="sg-inner">
+                        <div class="ssb">
+                            <table class="st" id="sAN">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">N</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sAN')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sBN">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">N</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sBN')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sCN">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">N</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sCN')">Add Row</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- G -->
+                <div class="sg">
+                    <div class="sg-inner">
+                        <div class="ssb">
+                            <table class="st" id="sAG">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">G</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sAG')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sBG">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">G</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sBG')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sCG">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">G</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sCG')">Add Row</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1L -->
+                <div class="sg">
+                    <div class="sg-inner">
+                        <div class="ssb">
+                            <table class="st" id="sA1L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">1 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sA1L')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sB1L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">1 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sB1L')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sC1L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">1 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sC1L')">Add Row</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2L -->
+                <div class="sg">
+                    <div class="sg-inner">
+                        <div class="ssb">
+                            <table class="st" id="sA2L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">2 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sA2L')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sB2L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">2 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sB2L')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sC2L">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">2 L</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sC2L')">Add Row</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9.2 -->
+                <div class="sg">
+                    <div class="sg-inner">
+                        <div class="ssb">
+                            <table class="st" id="sA92">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">9.2</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sA92')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sB92">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">9.2</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sB92')">Add Row</button>
+                        </div>
+                        <div class="ssb">
+                            <table class="st" id="sC92">
+                                <thead>
+                                    <tr>
+                                        <th class="cos">Opening<br>Stock</th>
+                                        <th class="cpb">Production<br>Bags</th>
+                                        <th class="cnm sn">9.2</th>
+                                        <th class="csl">Sale</th>
+                                        <th class="ccs">Closing<br>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="text" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                        <td><input type="number" step="any" /></td>
+                                    </tr>
+                                </tbody>
+                            </table><button class="add-row-btn2" onclick="addStRow('sC92')">Add Row</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /p2 -->
+
+            <!-- ═══════════════ SHIFT SAVE FOOTER ═══════════════ -->
+            <div class="all-shifts-footer">
+                <div class="asf-block">
+                    <div class="asf-label">SHIFT A</div>
+                    <div class="lock-badge" id="lockBadgeA">🔒 LOCKED</div>
+                    <button class="save-shift-btn" id="saveBtnA" onclick="freezeShift('A')">🔒 Save &amp; Lock Shift
+                        A</button>
+                </div>
+                <div class="asf-block">
+                    <div class="asf-label">SHIFT B</div>
+                    <div class="lock-badge" id="lockBadgeB">🔒 LOCKED</div>
+                    <button class="save-shift-btn" id="saveBtnB" onclick="freezeShift('B')">🔒 Save &amp; Lock Shift
+                        B</button>
+                </div>
+                <div class="asf-block">
+                    <div class="asf-label">SHIFT C</div>
+                    <div class="lock-badge" id="lockBadgeC">🔒 LOCKED</div>
+                    <button class="save-shift-btn" id="saveBtnC" onclick="freezeShift('C')">🔒 Save &amp; Lock Shift
+                        C</button>
+                </div>
+            </div>
+
+            <!-- ═══════════════ GLOBAL SUBMIT ═══════════════ -->
+            <div class="submit-section">
+                <button class="final-submit-btn" onclick="submitFullForm()">Submit Daily Production Sheet</button>
+            </div>
+
+        </div>
+    </div><!-- /sheet /wrapper -->
+
+    <script>
+        /* ════════════════════════════════════════
+           UTILITIES
+        ════════════════════════════════════════ */
+        const v = id => parseFloat(document.getElementById(id).value) || 0;
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = isNaN(val) ? '' : Math.round(val * 10000) / 10000;
+        };
+
+        /* ════════════════════════════════════════
+           DATE SYNC
+        ════════════════════════════════════════ */
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tbDate').value = today;
+        document.getElementById('shDate').value = today;
+        function syncDate(val) {
+            document.getElementById('tbDate').value = val;
+            document.getElementById('shDate').value = val;
+        }
+
+        /* ════════════════════════════════════════
+           SHIFT A — M1
+           Opening  = prevClose + rawMaterial  (auto)
+           Prod     = SUM(Production Bags in selected capacity table) × 20  (auto)
+           Closing  = Opening - Production - Rejection  (auto)
+           Rejection Total = R1 + R2  (auto)
+        ════════════════════════════════════════ */
+        function sumBags(tableId) {
+            if (!tableId) return 0;
+            const tbl = document.getElementById(tableId);
+            if (!tbl) return 0;
+            let total = 0;
+            // Production Bags is always column index 1 (2nd <td>)
+            tbl.querySelectorAll('tbody tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                if (cells[1]) total += parseFloat(cells[1].querySelector('input')?.value) || 0;
+            });
+            return total;
+        }
+
+        function calcOpenA_m1() {
+            set('openA_m1', v('prevCloseA_m1') + v('rawA_m1'));
+            calcCloseA_m1();
+        }
+        function calcProdA_m1() {
+            const tableId = document.getElementById('capA_m1')?.value;
+            const bags = sumBags(tableId);
+            set('prodA_m1', bags * 20);
+            calcCloseA_m1();
+        }
+        function calcCloseA_m1() {
+            set('closeA_m1', v('openA_m1') - v('prodA_m1') - v('rejTA_m1'));
+            flowB_m1();
+        }
+        function calcRejA_m1() {
+            set('rejTA_m1', v('rej1A_m1') + v('rej2A_m1'));
+            syncAllRejects();
+            calcCloseA_m1();
+        }
+
+        /* SHIFT A — M2 */
+        function calcOpenA_m2() {
+            set('openA_m2', v('prevCloseA_m2') + v('rawA_m2'));
+            calcCloseA_m2();
+        }
+        function calcProdA_m2() {
+            const tableId = document.getElementById('capA_m2')?.value;
+            const bags = sumBags(tableId);
+            set('prodA_m2', bags * 20);
+            calcCloseA_m2();
+        }
+        function calcCloseA_m2() {
+            set('closeA_m2', v('openA_m2') - v('prodA_m2') - v('rejTA_m2'));
+            flowB_m2();
+        }
+        function calcRejA_m2() {
+            set('rejTA_m2', v('rej1A_m2') + v('rej2A_m2'));
+            syncAllRejects();
+            calcCloseA_m2();
+        }
+
+        /* ════════════════════════════════════════
+           SHIFT FLOW: A → B
+           Shift B's "Prev Closing" = Shift A's Closing Stock (auto)
+        ════════════════════════════════════════ */
+        function flowB_m1() {
+            document.getElementById('prevCloseB_m1').value = v('closeA_m1') || '';
+            calcOpenB_m1();
+        }
+        function flowB_m2() {
+            document.getElementById('prevCloseB_m2').value = v('closeA_m2') || '';
+            calcOpenB_m2();
+        }
+
+        /* SHIFT B — M1 */
+        function calcOpenB_m1() {
+            set('openB_m1', v('prevCloseB_m1') + v('rawB_m1'));
+            calcCloseB_m1();
+        }
+        function calcProdB_m1() {
+            const tableId = document.getElementById('capB_m1')?.value;
+            set('prodB_m1', sumBags(tableId) * 20);
+            calcCloseB_m1();
+        }
+        function calcCloseB_m1() {
+            set('closeB_m1', v('openB_m1') - v('prodB_m1') - v('rejTB_m1'));
+            flowC_m1();
+        }
+        function calcRejB_m1() {
+            set('rejTB_m1', v('rej1B_m1') + v('rej2B_m1'));
+            syncAllRejects();
+            calcCloseB_m1();
+        }
+
+        /* SHIFT B — M2 */
+        function calcOpenB_m2() {
+            set('openB_m2', v('prevCloseB_m2') + v('rawB_m2'));
+            calcCloseB_m2();
+        }
+        function calcProdB_m2() {
+            const tableId = document.getElementById('capB_m2')?.value;
+            set('prodB_m2', sumBags(tableId) * 20);
+            calcCloseB_m2();
+        }
+        function calcCloseB_m2() {
+            set('closeB_m2', v('openB_m2') - v('prodB_m2') - v('rejTB_m2'));
+            flowC_m2();
+        }
+        function calcRejB_m2() {
+            set('rejTB_m2', v('rej1B_m2') + v('rej2B_m2'));
+            syncAllRejects();
+            calcCloseB_m2();
+        }
+
+        /* ════════════════════════════════════════
+           SHIFT FLOW: B → C
+        ════════════════════════════════════════ */
+        function flowC_m1() {
+            document.getElementById('prevCloseC_m1').value = v('closeB_m1') || '';
+            calcOpenC_m1();
+        }
+        function flowC_m2() {
+            document.getElementById('prevCloseC_m2').value = v('closeB_m2') || '';
+            calcOpenC_m2();
+        }
+
+        /* SHIFT C — M1 */
+        function calcOpenC_m1() {
+            set('openC_m1', v('prevCloseC_m1') + v('rawC_m1'));
+            calcCloseC_m1();
+        }
+        function calcProdC_m1() {
+            const tableId = document.getElementById('capC_m1')?.value;
+            set('prodC_m1', sumBags(tableId) * 20);
+            calcCloseC_m1();
+        }
+        function calcCloseC_m1() {
+            set('closeC_m1', v('openC_m1') - v('prodC_m1') - v('rejTC_m1'));
+        }
+        function calcRejC_m1() {
+            set('rejTC_m1', v('rej1C_m1') + v('rej2C_m1'));
+            syncAllRejects();
+            calcCloseC_m1();
+        }
+
+        /* SHIFT C — M2 */
+        function calcOpenC_m2() {
+            set('openC_m2', v('prevCloseC_m2') + v('rawC_m2'));
+            calcCloseC_m2();
+        }
+        function calcProdC_m2() {
+            const tableId = document.getElementById('capC_m2')?.value;
+            set('prodC_m2', sumBags(tableId) * 20);
+            calcCloseC_m2();
+        }
+        function calcCloseC_m2() {
+            set('closeC_m2', v('openC_m2') - v('prodC_m2') - v('rejTC_m2'));
+        }
+        function calcRejC_m2() {
+            set('rejTC_m2', v('rej1C_m2') + v('rej2C_m2'));
+            syncAllRejects();
+            calcCloseC_m2();
+        }
+
+        /* ════════════════════════════════════════
+           SYNC REJECTS TO DAILY LOG (via index relay)
+        ════════════════════════════════════════ */
+        function syncAllRejects() {
+            const data = {
+                type: 'elite_rejects',
+                payload: {
+                    A_m1_P: document.getElementById('rej1A_m1')?.value || '',
+                    A_m1_L: document.getElementById('rej2A_m1')?.value || '',
+                    A_m2_P: document.getElementById('rej1A_m2')?.value || '',
+                    A_m2_L: document.getElementById('rej2A_m2')?.value || '',
+                    B_m1_P: document.getElementById('rej1B_m1')?.value || '',
+                    B_m1_L: document.getElementById('rej2B_m1')?.value || '',
+                    B_m2_P: document.getElementById('rej1B_m2')?.value || '',
+                    B_m2_L: document.getElementById('rej2B_m2')?.value || '',
+                    C_m1_P: document.getElementById('rej1C_m1')?.value || '',
+                    C_m1_L: document.getElementById('rej2C_m1')?.value || '',
+                    C_m2_P: document.getElementById('rej1C_m2')?.value || '',
+                    C_m2_L: document.getElementById('rej2C_m2')?.value || ''
+                }
+            };
+            window.parent.postMessage(data, '*');
+        }
+
+        /* ════════════════════════════════════════
+           ADD ROW HELPERS
+           data-bags marks the Production Bags cell
+        ════════════════════════════════════════ */
+        /* ── Company name list ── */
+        const CO_NAMES = [
+            'SS PET', 'ALL PET', 'SVL', 'SVL2', 'AK PET',
+            'MDC KUSHAL', 'MDC U/B', 'AMMAN PET', 'BABU AQUA',
+            'PONNI PLASTIC', 'VS PET', 'KANISKA AQUA', 'SATHIYA AQUA'
+        ];
+
+        function makeCoSelect() {
+            const sel = document.createElement('select');
+            sel.className = 'cn-select';
+            sel.innerHTML = '<option value=""></option>' +
+                CO_NAMES.map(n => `<option value="${n}">${n}</option>`).join('');
+            return sel;
+        }
+
+        function addBtRow(tableId) {
+            const tbody = document.querySelector('#' + tableId + ' tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="number" step="any"/></td>' +
+                '<td data-bags="1"><input type="number" step="any"/></td>' +
+                '<td class="cn-td"></td>' +
+                '<td><input type="number" step="any"/></td>' +
+                '<td class="p2-close"><input type="number" step="any" readonly/></td>';
+            tr.querySelector('.cn-td').appendChild(makeCoSelect());
+            tbody.appendChild(tr);
+            tr.querySelector('input').focus();
+        }
+
+        function addStRow(tableId) {
+            const tbody = document.querySelector('#' + tableId + ' tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="number" step="any"/></td>' +
+                '<td data-bags="1"><input type="number" step="any"/></td>' +
+                '<td class="cn-td"></td>' +
+                '<td><input type="number" step="any"/></td>' +
+                '<td class="p2-close"><input type="number" step="any" readonly/></td>';
+            tr.querySelector('.cn-td').appendChild(makeCoSelect());
+            tbody.appendChild(tr);
+            tr.querySelector('input').focus();
+        }
+
+        /* ── Init: replace all existing Company Name text inputs with dropdowns ── */
+        function initCompanyDropdowns() {
+            // Page 1: bt tables — cells have class cn-td
+            document.querySelectorAll('td.cn-td').forEach(td => {
+                const old = td.querySelector('input[type="text"]');
+                if (!old) return;
+                const sel = makeCoSelect();
+                sel.value = old.value || '';
+                td.replaceChild(sel, old);
+            });
+
+            // Page 2: st tables — company name is the 3rd td in each row
+            document.querySelectorAll('table.st tbody tr').forEach(tr => {
+                const td = tr.cells[2];
+                if (!td) return;
+                const old = td.querySelector('input[type="text"]');
+                if (!old) return;
+                td.classList.add('cn-td');
+                const sel = makeCoSelect();
+                sel.value = old.value || '';
+                td.replaceChild(sel, old);
+            });
+        }
+
+        // Also patch freeze/unlock to handle select elements in cn-td
+        document.addEventListener('DOMContentLoaded', initCompanyDropdowns);
+
+        /* ════════════════════════════════════════
+           PAGE 1 & 2 — ROW-LEVEL CLOSING STOCK
+           Closing = Opening + Production Bags − Sale
+           Col index: 0=Opening, 1=ProdBags, 2=Name(text), 3=Sale, 4=Closing
+        ════════════════════════════════════════ */
+        function calcP2RowClose(tr) {
+            const cells = tr.querySelectorAll('td');
+            if (cells.length < 5) return;
+            const open = parseFloat(cells[0].querySelector('input')?.value) || 0;
+            const bags = parseFloat(cells[1].querySelector('input')?.value) || 0;
+            const sale = parseFloat(cells[3].querySelector('input')?.value) || 0;
+            const closeVal = Math.round((open + bags - sale) * 10000) / 10000;
+            const closeInp = cells[4].querySelector('input');
+            if (closeInp) closeInp.value = isNaN(closeVal) ? '' : closeVal;
+        }
+
+        // Delegate on .p2 — triggers for Opening, Bags, Sale changes in page 2 tables
+        document.querySelector('.p2').addEventListener('input', function (e) {
+            const inp = e.target;
+            if (inp.tagName !== 'INPUT') return;
+            const td = inp.closest('td');
+            if (!td) return;
+            const tr = td.closest('tr');
+            if (!tr || !tr.closest('.st')) return;
+            const cells = Array.from(tr.children);
+            const idx = cells.indexOf(td);
+            if (idx === 0 || idx === 1 || idx === 3) calcP2RowClose(tr);
+        });
+
+        // Delegate on .three-shifts — same formula for 300ml / 500ml (.bt) tables
+        document.querySelector('.three-shifts').addEventListener('input', function (e) {
+            const inp = e.target;
+            if (inp.tagName !== 'INPUT') return;
+            const td = inp.closest('td');
+            if (!td) return;
+            const tr = td.closest('tr');
+            if (!tr || !tr.closest('.bt')) return;
+            const cells = Array.from(tr.children);
+            const idx = cells.indexOf(td);
+            if (idx === 0 || idx === 1 || idx === 3) calcP2RowClose(tr);
+        });
+
+        /* ════════════════════════════════════════
+           GLOBAL DELEGATE — Production Bags live update
+           When any bags cell (col-index 1 in .bt/.st tbody) changes,
+           find which machine has that table selected and recalc.
+        ════════════════════════════════════════ */
+        const CAP_TO_CALC = {
+            capA_m1: calcProdA_m1, capA_m2: calcProdA_m2,
+            capB_m1: calcProdB_m1, capB_m2: calcProdB_m2,
+            capC_m1: calcProdC_m1, capC_m2: calcProdC_m2
+        };
+        document.querySelector('.sheet').addEventListener('input', function (e) {
+            const inp = e.target;
+            if (inp.tagName !== 'INPUT' || inp.type !== 'number') return;
+            const td = inp.closest('td');
+            if (!td) return;
+            // Only trigger if it's the 2nd <td> (index 1) = Production Bags column
+            const cells = Array.from(td.parentElement.children);
+            if (cells.indexOf(td) !== 1) return;
+            // Find which table this cell belongs to
+            const tbl = inp.closest('table');
+            if (!tbl || !tbl.id) return;
+            const tblId = tbl.id;
+            // Find which capacity select has this table selected and run its calcProd
+            Object.entries(CAP_TO_CALC).forEach(([selId, fn]) => {
+                const sel = document.getElementById(selId);
+                if (sel && sel.value === tblId) fn();
+            });
+        });
+
+        /* ════════════════════════════════════════
+           VALIDATION — prevent negative on blur
+        ════════════════════════════════════════ */
+        document.addEventListener('blur', function (e) {
+            const el = e.target;
+            if (el.tagName === 'INPUT' && el.type === 'number' && !el.readOnly) {
+                const val = parseFloat(el.value);
+                if (!isNaN(val) && val < 0) {
+                    el.value = 0;
+                    el.classList.add('err');
+                    setTimeout(() => el.classList.remove('err'), 1500);
+                }
+            }
+        }, true);
+
+        /* ════════════════════════════════════════
+           INIT — mark existing static cells
+        ════════════════════════════════════════ */
+        document.querySelectorAll('.bt tbody tr, .st tbody tr').forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            // Mark production bags col (index 1) for page 1 delegate
+            if (cells[1]) cells[1].setAttribute('data-bags', '1');
+            // Make closing stock (index 4) readonly + styled for both .bt and .st tables
+            if (cells[4]) {
+                cells[4].classList.add('p2-close');
+                const inp = cells[4].querySelector('input');
+                if (inp) inp.readOnly = true;
+            }
+        });
+
+        /* ════════════════════════════════════════
+           SHIFT FREEZE / UNLOCK
+        ════════════════════════════════════════ */
+        const shiftWrap = { A: '.sa', B: '.sb', C: '.sc' };
+        // Page-2 stock table IDs per shift (N, G, 1L, 2L, 9.2)
+        const shiftP2Ids = {
+            A: ['sAN', 'sAG', 'sA1L', 'sA2L', 'sA92'],
+            B: ['sBN', 'sBG', 'sB1L', 'sB2L', 'sB92'],
+            C: ['sCN', 'sCG', 'sC1L', 'sC2L', 'sC92']
+        };
+        const frozenState = { A: false, B: false, C: false };
+
+        function freezeShift(shift) {
+            const wrap = document.querySelector(shiftWrap[shift]);
+            const btn = document.getElementById('saveBtn' + shift);
+            const badge = document.getElementById('lockBadge' + shift);
+            if (!wrap) return;
+
+            // Collect all inputs/selects from page-1 shift block
+            const p1Els = Array.from(wrap.querySelectorAll(
+                'input:not([readonly]), select, button.add-row-btn'
+            ));
+
+            // Collect all inputs from page-2 stock columns for this shift
+            const p2Els = [];
+            const ssbBlocks = [];
+            shiftP2Ids[shift].forEach(id => {
+                const tbl = document.getElementById(id);
+                if (tbl) {
+                    tbl.querySelectorAll('input:not([readonly])').forEach(el => p2Els.push(el));
+                    // also lock the add-row button right after the table
+                    const addBtn = tbl.nextElementSibling;
+                    if (addBtn && addBtn.classList.contains('add-row-btn2')) p2Els.push(addBtn);
+
+                    const ssb = tbl.closest('.ssb');
+                    if (ssb && !ssbBlocks.includes(ssb)) ssbBlocks.push(ssb);
+                }
+            });
+
+            const allEls = [...p1Els, ...p2Els];
+
+            if (!frozenState[shift]) {
+                // ── FREEZE ──
+                frozenState[shift] = true;
+                wrap.classList.add('frozen');
+                ssbBlocks.forEach(ssb => ssb.classList.add('frozen'));
+
+                allEls.forEach(el => { el.disabled = true; });
+                btn.textContent = '🔓 Unlock Shift ' + shift;
+                btn.classList.add('locked');
+                badge.classList.add('visible');
+            } else {
+                // ── UNLOCK ──
+                frozenState[shift] = false;
+                wrap.classList.remove('frozen');
+                ssbBlocks.forEach(ssb => ssb.classList.remove('frozen'));
+
+                allEls.forEach(el => { el.disabled = false; });
+                btn.textContent = '🔒 Save & Lock Shift ' + shift;
+                btn.classList.remove('locked');
+                badge.classList.remove('visible');
+            }
+        }
+        /* ════════════════════════════════════════
+           GLOBAL SUBMIT
+        ════════════════════════════════════════ */
+        function submitFullForm() {
+            // You can add your database or API submission logic here
+            alert("✅ Daily Production Sheet submitted successfully!");
+        }
+
+        /* ════════════════════════════════════════
+           CAPACITY → DAILY LOG SYNC
+           When M1 or M2 capacity is selected, relay
+           the label to the Daily Log sheet via parent.
+        ════════════════════════════════════════ */
+        function syncCapToParent(machine, displayText) {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage(
+                    { type: 'elite_capacity', machine: machine, text: displayText },
+                    '*'
+                );
+            }
+        }
+
+        // Attach to all 6 capacity selects (capA_m1, capA_m2, capB_m1, capB_m2, capC_m1, capC_m2)
+        ['A', 'B', 'C'].forEach(function (shift) {
+            ['m1', 'm2'].forEach(function (mach) {
+                const sel = document.getElementById('cap' + shift + '_' + mach);
+                if (!sel) return;
+                sel.addEventListener('change', function () {
+                    const opt = this.options[this.selectedIndex];
+                    const txt = (opt && this.value) ? opt.text : '';
+                    syncCapToParent(mach, txt);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
