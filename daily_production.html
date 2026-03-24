@@ -2586,6 +2586,7 @@
             const bags = sumBags(tableId);
             set('prodA_m1', bags * 20);
             calcCloseA_m1();
+            syncAllProdBags();
         }
         function calcCloseA_m1() {
             set('closeA_m1', v('openA_m1') - v('prodA_m1') - v('rejTA_m1'));
@@ -2607,6 +2608,7 @@
             const bags = sumBags(tableId);
             set('prodA_m2', bags * 20);
             calcCloseA_m2();
+            syncAllProdBags();
         }
         function calcCloseA_m2() {
             set('closeA_m2', v('openA_m2') - v('prodA_m2') - v('rejTA_m2'));
@@ -2640,6 +2642,7 @@
             const tableId = document.getElementById('capB_m1')?.value;
             set('prodB_m1', sumBags(tableId) * 20);
             calcCloseB_m1();
+            syncAllProdBags();
         }
         function calcCloseB_m1() {
             set('closeB_m1', v('openB_m1') - v('prodB_m1') - v('rejTB_m1'));
@@ -2660,6 +2663,7 @@
             const tableId = document.getElementById('capB_m2')?.value;
             set('prodB_m2', sumBags(tableId) * 20);
             calcCloseB_m2();
+            syncAllProdBags();
         }
         function calcCloseB_m2() {
             set('closeB_m2', v('openB_m2') - v('prodB_m2') - v('rejTB_m2'));
@@ -2692,6 +2696,7 @@
             const tableId = document.getElementById('capC_m1')?.value;
             set('prodC_m1', sumBags(tableId) * 20);
             calcCloseC_m1();
+            syncAllProdBags();
         }
         function calcCloseC_m1() {
             set('closeC_m1', v('openC_m1') - v('prodC_m1') - v('rejTC_m1'));
@@ -2711,6 +2716,7 @@
             const tableId = document.getElementById('capC_m2')?.value;
             set('prodC_m2', sumBags(tableId) * 20);
             calcCloseC_m2();
+            syncAllProdBags();
         }
         function calcCloseC_m2() {
             set('closeC_m2', v('openC_m2') - v('prodC_m2') - v('rejTC_m2'));
@@ -2719,6 +2725,31 @@
             set('rejTC_m2', v('rej1C_m2') + v('rej2C_m2'));
             syncAllRejects();
             calcCloseC_m2();
+        }
+
+        /* ════════════════════════════════════════
+           SYNC PRODUCTION BAGS TO DAILY LOG (via index relay)
+           Sends M1 and M2 total bags per shift so daily.html
+           can fill the size-grid P / L columns (rows 0/1/2).
+        ════════════════════════════════════════ */
+        function syncAllProdBags() {
+            if (!window.parent || window.parent === window) return;
+            const getBags = (shift, mach) => {
+                const sel = document.getElementById('cap' + shift + '_' + mach);
+                return sel && sel.value ? sumBags(sel.value) : '';
+            };
+            const data = {
+                type: 'elite_prod_bags',
+                payload: {
+                    A_m1: getBags('A', 'm1'),
+                    A_m2: getBags('A', 'm2'),
+                    B_m1: getBags('B', 'm1'),
+                    B_m2: getBags('B', 'm2'),
+                    C_m1: getBags('C', 'm1'),
+                    C_m2: getBags('C', 'm2')
+                }
+            };
+            window.parent.postMessage(data, '*');
         }
 
         /* ════════════════════════════════════════
@@ -2817,7 +2848,110 @@
         }
 
         // Also patch freeze/unlock to handle select elements in cn-td
-        document.addEventListener('DOMContentLoaded', initCompanyDropdowns);
+        document.addEventListener('DOMContentLoaded', () => {
+            initCompanyDropdowns();
+            propagateStocks();
+        });
+
+        /* ════════════════════════════════════════
+           STOCK PROPAGATION: A -> B -> C -> Tomorrow A
+        ════════════════════════════════════════ */
+        let isPropagating = false;
+        function propagateStocks() {
+            // Propagate M1/M2 stocks for next day (Shift A)
+            const m1Stored = localStorage.getItem('elite_stock_closeC_m1');
+            const m2Stored = localStorage.getItem('elite_stock_closeC_m2');
+            
+            const prevA_m1 = document.getElementById('prevCloseA_m1');
+            const prevA_m2 = document.getElementById('prevCloseA_m2');
+            
+            if (prevA_m1 && m1Stored !== null && prevA_m1.value !== m1Stored) {
+                prevA_m1.value = m1Stored;
+                prevA_m1.classList.add('flow-in');
+                prevA_m1.readOnly = true;
+                if (typeof calcOpenA_m1 === 'function') calcOpenA_m1();
+            }
+            if (prevA_m2 && m2Stored !== null && prevA_m2.value !== m2Stored) {
+                prevA_m2.value = m2Stored;
+                prevA_m2.classList.add('flow-in');
+                prevA_m2.readOnly = true;
+                if (typeof calcOpenA_m2 === 'function') calcOpenA_m2();
+            }
+
+            const tableGroups = [
+                { type: 'bt', sizes: ['300', '500'] },
+                { type: 'st', sizes: ['N', 'G', '1L', '2L', '92'] }
+            ];
+
+            tableGroups.forEach(group => {
+                group.sizes.forEach(size => {
+                    const prefix = group.type === 'bt' ? 't' : 's';
+                    const tblA = document.getElementById(`${prefix}A${size}`);
+                    const tblB = document.getElementById(`${prefix}B${size}`);
+                    const tblC = document.getElementById(`${prefix}C${size}`);
+
+                    if (!tblA || !tblB || !tblC) return;
+
+                    // 1. Get stored (Yesterday's Shift C closing)
+                    let stored = {};
+                    try {
+                        stored = JSON.parse(localStorage.getItem(`elite_stock_${size}`) || '{}');
+                    } catch (e) {}
+
+                    // Apply to Shift A
+                    applyOpening(tblA, stored);
+
+                    // 2. A -> B
+                    const mapA = extractClosing(tblA);
+                    applyOpening(tblB, { ...stored, ...mapA });
+
+                    // 3. B -> C
+                    const mapB = extractClosing(tblB);
+                    applyOpening(tblC, { ...stored, ...mapA, ...mapB });
+                });
+            });
+        }
+
+        function extractClosing(tbl) {
+            const map = {};
+            const tbody = tbl.querySelector('tbody');
+            if (!tbody) return map;
+            tbody.querySelectorAll('tr').forEach((tr, idx) => {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 5) return;
+                const closeInp = cells[4].querySelector('input');
+                if (!closeInp) return;
+                const closeVal = parseFloat(closeInp.value);
+                if (!isNaN(closeVal)) {
+                    map[idx] = closeVal;
+                }
+            });
+            return map;
+        }
+
+        function applyOpening(tbl, map) {
+            const tbody = tbl.querySelector('tbody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr').forEach((tr, idx) => {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 5) return;
+                const openInp = cells[0].querySelector('input');
+                if (!openInp) return;
+
+                if (map[idx] !== undefined) {
+                    const mappedVal = map[idx];
+                    if (openInp.value !== String(mappedVal)) {
+                        openInp.value = mappedVal;
+                        calcP2RowClose(tr); // Re-calc closing stock for this row since opening changed
+                    }
+                    openInp.classList.add('flow-in');
+                    openInp.readOnly = true;
+                } else {
+                    openInp.classList.remove('flow-in');
+                    openInp.readOnly = false;
+                }
+            });
+        }
 
         /* ════════════════════════════════════════
            PAGE 1 & 2 — ROW-LEVEL CLOSING STOCK
@@ -2832,7 +2966,15 @@
             const sale = parseFloat(cells[3].querySelector('input')?.value) || 0;
             const closeVal = Math.round((open + bags - sale) * 10000) / 10000;
             const closeInp = cells[4].querySelector('input');
-            if (closeInp) closeInp.value = isNaN(closeVal) ? '' : closeVal;
+            const newVal = isNaN(closeVal) ? '' : closeVal;
+            const changed = closeInp && closeInp.value !== String(newVal);
+            if (closeInp) closeInp.value = newVal;
+            
+            if (changed && !isPropagating && typeof propagateStocks === 'function') {
+                isPropagating = true;
+                propagateStocks();
+                isPropagating = false;
+            }
         }
 
         // Delegate on .p2 — triggers for Opening, Bags, Sale changes in page 2 tables
@@ -2859,6 +3001,17 @@
             const cells = Array.from(tr.children);
             const idx = cells.indexOf(td);
             if (idx === 0 || idx === 1 || idx === 3) calcP2RowClose(tr);
+        });
+
+        // Delegate for company dropdown changes to propagate stocks immediately
+        document.querySelector('.sheet').addEventListener('change', function (e) {
+            if (e.target.tagName === 'SELECT' && e.target.closest('.cn-td')) {
+                if (!isPropagating) {
+                    isPropagating = true;
+                    propagateStocks();
+                    isPropagating = false;
+                }
+            }
         });
 
         /* ════════════════════════════════════════
@@ -2987,8 +3140,38 @@
            GLOBAL SUBMIT
         ════════════════════════════════════════ */
         function submitFullForm() {
+            saveStocksForTomorrow();
             // You can add your database or API submission logic here
-            alert("✅ Daily Production Sheet submitted successfully!");
+            alert("✅ Daily Production Sheet submitted successfully! Stocks saved for tomorrow.");
+        }
+
+        function saveStocksForTomorrow() {
+            const tableGroups = [
+                { type: 'bt', sizes: ['300', '500'] },
+                { type: 'st', sizes: ['N', 'G', '1L', '2L', '92'] }
+            ];
+            tableGroups.forEach(group => {
+                group.sizes.forEach(size => {
+                    const prefix = group.type === 'bt' ? 't' : 's';
+                    const tblC = document.getElementById(`${prefix}C${size}`);
+                    if (!tblC) return;
+                    
+                    let stored = {};
+                    try {
+                        stored = JSON.parse(localStorage.getItem(`elite_stock_${size}`) || '{}');
+                    } catch (e) {}
+                    
+                    const mapC = extractClosing(tblC);
+                    const finalMap = { ...stored, ...mapC };
+                    localStorage.setItem(`elite_stock_${size}`, JSON.stringify(finalMap));
+                });
+            });
+
+            // Save M1 and M2 closing stocks for tomorrow
+            const closeC_m1 = document.getElementById('closeC_m1');
+            if (closeC_m1) localStorage.setItem('elite_stock_closeC_m1', closeC_m1.value);
+            const closeC_m2 = document.getElementById('closeC_m2');
+            if (closeC_m2) localStorage.setItem('elite_stock_closeC_m2', closeC_m2.value);
         }
 
         /* ════════════════════════════════════════
