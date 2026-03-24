@@ -249,10 +249,24 @@
 
         .date-cell input[type="date"] {
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             opacity: 0;
-            width: 0;
-            height: 0;
-            pointer-events: none;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .date-cell input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
         }
 
         /* Shared select styles */
@@ -286,6 +300,7 @@
             padding: 0 4px;
             text-align: center;
             color: #000;
+            appearance: textfield;
             -moz-appearance: textfield;
         }
 
@@ -430,7 +445,7 @@
             const tr = document.createElement('tr');
             tr.dataset.row = i;
             tr.innerHTML = `
-                <td><div class="date-cell" onclick="pickDate(this)">
+                <td><div class="date-cell">
                     <input type="date" onchange="showDate(this); markDirty(${i})">
                     <span></span>
                 </div></td>
@@ -444,12 +459,6 @@
 
             // Restore saved row if exists
             if (savedData[i]) restoreRow(tr, savedData[i]);
-        }
-
-        function pickDate(div) {
-            const input = div.querySelector('input[type="date"]');
-            try { if (input.showPicker) input.showPicker(); else input.click(); }
-            catch (e) { input.click(); }
         }
 
         function showDate(input) {
@@ -526,6 +535,13 @@
                 btn.textContent = '✓ SAVED';
             }
         }
+
+        // Listen for updates from Daily Log (or other tabs) to keep pages fully synced
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                location.reload();
+            }
+        });
     </script>
 </body>
 
