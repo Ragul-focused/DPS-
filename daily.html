@@ -96,34 +96,17 @@
             background: #fff;
             border: 1.5px solid #666;
             box-shadow: 0 2px 14px rgba(0, 0, 0, .22);
-            max-width: 1260px;
+            max-width: 760px;
             margin: 0 auto 20px;
         }
 
         .pg-label {
-            font-size: .6rem;
-            font-weight: 700;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: #888;
-            text-align: center;
-            padding: 2px 0;
-            background: #f0f2f5;
-            border-bottom: 1px solid #ccc;
+            display: none;
         }
 
-        /* ── TWO-PANEL SPLIT ── */
-        .panels {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
+        /* ── TWO-PANEL SPLIT (REMOVED: Single Sheet now) ── */
         .panel {
-            border-right: 3px solid #000;
-        }
-
-        .panel:last-child {
-            border-right: none;
+            width: 100%;
         }
 
         /* ── TABLE BASE ── */
@@ -380,7 +363,7 @@
             }
 
             @page {
-                size: A4 landscape;
+                size: A4 portrait;
                 margin: 5mm;
             }
         }
@@ -400,20 +383,7 @@
 
     <!-- PAGE 1: FRONT -->
     <div class="page" id="pg1">
-        <div class="pg-label"></div>
-        <div class="panels">
-            <div class="panel" id="f1"></div>
-            <div class="panel" id="f2"></div>
-        </div>
-    </div>
-
-    <!-- PAGE 2: BACK -->
-    <div class="page" id="pg2">
-        <div class="pg-label"></div>
-        <div class="panels">
-            <div class="panel" id="b1"></div>
-            <div class="panel" id="b2"></div>
-        </div>
+        <div class="panel" id="f1"></div>
     </div>
 
     <script>
@@ -515,10 +485,29 @@
 
             /* Data rows */
             for (let i = 0; i < MAIN_ROWS; i++) {
-                h += `<tr>
+                let particularCell = '';
+                if (i < 6) {
+                    particularCell = `
+      <td colspan="2" style="border-top:${i === 0 ? '2px solid #000' : '1px solid #aaa'}; overflow:visible; position:relative;">
+        <div class="co-wrap">
+          <div class="co-display" tabindex="0" id="${id}_p${i}" data-value=""
+               onclick="toggleDrop(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleDrop(this)">
+          </div>
+          <div class="co-dropdown" id="${id}_p${i}_drop">
+            <div class="co-option clear" onclick="selectCo(this,'')">— clear —</div>
+            ${COMPANIES.map(c => `<div class="co-option" onclick="selectCo(this,'${c}')">${c}</div>`).join('')}
+          </div>
+        </div>
+      </td>`;
+                } else {
+                    particularCell = `
       <td colspan="2" style="border-top:${i === 0 ? '2px solid #000' : '1px solid #aaa'}">
         <input type="text" id="${id}_p${i}"/>
-      </td>
+      </td>`;
+                }
+
+                h += `<tr>
+${particularCell}
       <td style="border-top:${i === 0 ? '2px solid #000' : '1px solid #aaa'}; overflow:visible; position:relative;">
         <div class="co-wrap">
           <div class="co-display" tabindex="0" id="${id}_mo${i}" data-value=""
@@ -570,7 +559,6 @@
                 h += `<tr>`;
                 SIZES.forEach((s, ci) => {
                     if (s === '|') h += `<td class="sd div"></td>`;
-                    else if (s === '') h += `<td class="sd"></td>`;
                     else h += `<td class="sd"><input type="number" step="any" id="${id}_sz${r}_${ci}"/></td>`;
                 });
                 h += `</tr>`;
@@ -622,17 +610,41 @@
     <td class="val" colspan="${totalCols - Math.floor(totalCols / 2)}"><input type="number" step="any" id="${id}_ob"/></td>
   </tr>`;
 
-            /* spacers */
-            h += `<tr><td colspan="${totalCols}" style="height:22px;border:1px solid #aaa"></td></tr>`;
+            /* TOTAL (O/B + IN AMT) */
+            h += `<tr class="ob">
+    <td class="lbl" colspan="${Math.floor(totalCols / 2)}">TOTAL-</td>
+    <td class="val" colspan="${totalCols - Math.floor(totalCols / 2)}"><input type="number" step="any" id="${id}_total" readonly style="background:#f0fff4; color:#065f46; font-weight:900; -webkit-print-color-adjust: exact; print-color-adjust: exact;"/></td>
+  </tr>`;
+
+            /* spacer */
             h += `<tr><td colspan="${totalCols}" style="height:22px;border:1px solid #aaa"></td></tr>`;
 
             /* ── C/B ── */
             h += `<tr class="cb">
     <td class="lbl" colspan="${Math.floor(totalCols / 2)}">C/B-</td>
-    <td class="val" colspan="${totalCols - Math.floor(totalCols / 2)}"><input type="number" step="any" id="${id}_cb"/></td>
+    <td class="val" colspan="${totalCols - Math.floor(totalCols / 2)}"><input type="number" step="any" id="${id}_cb" readonly style="background:#eef6ff; color:#1a3a6b; font-weight:900; -webkit-print-color-adjust: exact; print-color-adjust: exact;"/></td>
   </tr>`;
 
             h += `</table>`;
+
+            /* ── POST TO LEDGER BUTTON ── */
+            h += `
+            <div style="margin-top:16px; text-align:right;">
+                <button type="button" onclick="postToLedger('${id}')" style="
+                    background: #f5c842;
+                    color: #111;
+                    border: 1px solid #c29b20;
+                    border-radius: 4px;
+                    padding: 8px 18px;
+                    font-weight: 900;
+                    font-size: .8rem;
+                    letter-spacing: .08em;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+                ">↳ Save & Post to Ledger</button>
+            </div>`;
+
             return h;
         }
 
@@ -647,9 +659,6 @@
 
         /* ── INJECT ── */
         document.getElementById('f1').innerHTML = frontPanel('f1');
-        document.getElementById('f2').innerHTML = frontPanel('f2');
-        document.getElementById('b1').innerHTML = backPanel('b1');
-        document.getElementById('b2').innerHTML = backPanel('b2');
 
         /* ── AUTO DATE ── */
         const today = new Date();
@@ -660,8 +669,8 @@
 
         document.getElementById('tbDate').value = dateVal;
 
-        // Fill date input in all 4 panels
-        ['f1', 'f2', 'b1', 'b2'].forEach(id => {
+        // Fill date input in panel
+        ['f1'].forEach(id => {
             const inp = document.getElementById(id + '_date');
             if (inp) inp.value = dateVal;
         });
@@ -671,7 +680,7 @@
             if (!e.data || e.data.type !== 'elite_capacity') return;
             const mach = e.data.machine; // 'm1' or 'm2'
             const text = e.data.text || '';
-            const panels = ['f1', 'f2', 'b1', 'b2'];
+            const panels = ['f1'];
             panels.forEach(pid => {
                 const cell = document.getElementById(pid + '_' + mach + 'cap');
                 if (cell) cell.textContent = text;
@@ -682,7 +691,7 @@
         window.addEventListener('message', function (e) {
             if (!e.data || e.data.type !== 'elite_rejects') return;
             const p = e.data.payload;
-            const panels = ['f1', 'f2', 'b1', 'b2'];
+            const panels = ['f1'];
             const shiftRow = { A: 0, B: 1, C: 2 };
 
             panels.forEach(pid => {
@@ -703,9 +712,152 @@
             });
         });
 
-        /* ── AUTO-SUM SIZE GRID COLUMNS INTO ROW 3 (TOTAL) ── */
+        /* ── RECEIVE PRODUCTION BAGS FROM DAILY PRODUCTION (via index.html relay) ── */
+        window.addEventListener('message', function (e) {
+            if (!e.data || e.data.type !== 'elite_prod_bags') return;
+            const p = e.data.payload;
+            const panels = ['f1'];
+            const shiftRow = { A: 0, B: 1, C: 2 };
+
+            panels.forEach(pid => {
+                ['A', 'B', 'C'].forEach(sh => {
+                    const r = shiftRow[sh];
+                    // M1 production bags → col 0 (Capacity column, index 0)
+                    if (p[sh + '_m1'] !== undefined) {
+                        const cellM1 = document.getElementById(`${pid}_sz${r}_0`);
+                        if (cellM1) {
+                            cellM1.value = p[sh + '_m1'];
+                            cellM1.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                    // M2 production bags → col 3 (Capacity column for M2, index 3)
+                    if (p[sh + '_m2'] !== undefined) {
+                        const cellM2 = document.getElementById(`${pid}_sz${r}_3`);
+                        if (cellM2) {
+                            cellM2.value = p[sh + '_m2'];
+                            cellM2.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                });
+            });
+        });
+
+        /* ── POST DAILY TXNS TO AMOUNT LEDGER ── */
+        function postToLedger(id) {
+            const dateVal = document.getElementById(id + '_date')?.value || '';
+            let ledgerData = {};
+            try { ledgerData = JSON.parse(localStorage.getItem('amount_ledger_rows') || '{}'); } catch(e){}
+
+            const MAX_ROWS = 30; // Amount Ledger has 30 rows setup
+            let postedCount = 0;
+
+            for (let i = 0; i < MAIN_ROWS; i++) {
+                // Read row data
+                let pElem = document.getElementById(id + '_p' + i);
+                let particular = pElem ? (pElem.dataset.value !== undefined ? pElem.dataset.value : pElem.value) : '';
+                let moElem = document.getElementById(id + '_mo' + i);
+                let mode = moElem ? moElem.dataset.value : '';
+                
+                let inBox = document.getElementById(id + '_in' + i);
+                let amtIn = inBox ? inBox.value : '';
+                let otBox = document.getElementById(id + '_ot' + i);
+                let amtOut = otBox ? otBox.value : '';
+
+                if (particular || amtIn || amtOut) {
+                    let finalParty = particular;
+                    if (mode && finalParty) finalParty += ` (${mode})`;
+                    else if (mode) finalParty = mode;
+
+                    // Find first fully blank line in ledger
+                    let targetIdx = -1;
+                    for (let pos = 0; pos < MAX_ROWS; pos++) {
+                        let ld = ledgerData[pos];
+                        if (!ld || (!ld.date && !ld.rcvd && !ld.party && !ld.amtIn && !ld.amtOut)) {
+                            targetIdx = pos;
+                            break;
+                        }
+                    }
+
+                    if (targetIdx !== -1) {
+                        ledgerData[targetIdx] = {
+                            date: dateVal,
+                            rcvd: '',
+                            party: finalParty,
+                            amtIn: amtIn,
+                            amtOut: amtOut
+                        };
+                        postedCount++;
+
+                        // Clear the daily log row so it is marked as processed
+                        if(pElem) {
+                            if (pElem.classList.contains('co-display')) {
+                                pElem.textContent = '';
+                                pElem.dataset.value = '';
+                            } else {
+                                pElem.value = '';
+                            }
+                        }
+                        if(moElem) {
+                            moElem.textContent = '';
+                            moElem.dataset.value = '';
+                        }
+                        if(inBox) inBox.value = '';
+                        if(otBox) otBox.value = '';
+                    } else {
+                        alert("Ledger is full! Could not post all rows. Please clear older entries in the Amount Ledger.");
+                        break;
+                    }
+                }
+            }
+
+            if (postedCount > 0) {
+                localStorage.setItem('amount_ledger_rows', JSON.stringify(ledgerData));
+                alert(`Successfully posted ${postedCount} transaction(s) to the Amount Ledger!`);
+                calcTotal(); // Update the visual totals since we cleared inputs
+            } else {
+                alert("No transactions found to post (fill in a PARTICULAR, IN AMT, or OUT AMT first).");
+            }
+        }
+
+        /* ── O/B + IN AMT TOTAL LOGIC & C/B TRANSFER ── */
+        function calcTotal() {
+            const ob = parseFloat(document.getElementById('f1_ob')?.value) || 0;
+            let sumIn = 0;
+            let sumOut = 0;
+            for (let i = 0; i < MAIN_ROWS; i++) {
+                sumIn += parseFloat(document.getElementById(`f1_in${i}`)?.value) || 0;
+                sumOut += parseFloat(document.getElementById(`f1_ot${i}`)?.value) || 0;
+            }
+            
+            const totalBox = document.getElementById('f1_total');
+            const finalSum = Math.round((ob + sumIn) * 1000) / 1000;
+            if (totalBox) {
+                totalBox.value = finalSum === 0 && ob === 0 ? '' : finalSum;
+            }
+            
+            const cbBox = document.getElementById('f1_cb');
+            if (cbBox) {
+                const finalCB = Math.round((finalSum - sumOut) * 1000) / 1000;
+                cbBox.value = finalCB === 0 && finalSum === 0 ? '' : finalCB;
+                // Automatically save the calculated C/B for tomorrow's O/B
+                localStorage.setItem('elite_daily_cb', cbBox.value);
+            }
+        }
+
+        // Initialize O/B with yesterday's C/B on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedCB = localStorage.getItem('elite_daily_cb');
+            const obInput = document.getElementById('f1_ob');
+            if (obInput && storedCB !== null && storedCB !== '') {
+                obInput.value = storedCB;
+                calcTotal();
+            }
+        });
+
         document.addEventListener('input', function(e) {
             if (!e.target || !e.target.id) return;
+            
+            // 1. Size grid columns sum
             const m = e.target.id.match(/^([a-z0-9]+)_sz(\d+)_(\d+)$/);
             if (m) {
                 const pid = m[1];
@@ -733,6 +885,11 @@
                         totalBox.style.color = '#1a3a6b';
                     }
                 }
+            }
+
+            // 2. Financial totals (O/B + IN AMT + OUT AMT)
+            if (e.target.id.includes('_in') || e.target.id.includes('_ob') || e.target.id.includes('_ot')) {
+                calcTotal();
             }
         });
     </script>
