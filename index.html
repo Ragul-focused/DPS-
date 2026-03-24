@@ -290,9 +290,9 @@
             }
         });
 
-        /* ── CAPACITY & REJECTS RELAY: frame1 (Production) → frame2 (Daily Log) ── */
+        /* ── CAPACITY, REJECTS & PROD BAGS RELAY: frame1 (Production) → frame2 (Daily Log) ── */
         window.addEventListener('message', function (e) {
-            if (!e.data || (e.data.type !== 'elite_capacity' && e.data.type !== 'elite_rejects')) return;
+            if (!e.data || (e.data.type !== 'elite_capacity' && e.data.type !== 'elite_rejects' && e.data.type !== 'elite_prod_bags')) return;
             const frame2 = document.getElementById('frame2');
             if (frame2 && frame2.contentWindow) {
                 frame2.contentWindow.postMessage(e.data, '*');
